@@ -15,7 +15,8 @@ export default function Consultancy() {
   const [lightbox, setLightbox] = useState(null); // { type, src }
   const [beforeAfter, setBeforeAfter] = useState({ images: [], videos: [] });
   const [clientReviews, setClientReviews] = useState({ images: [], videos: [] });
-  const [openFolder, setOpenFolder] = useState(null); // null, "before_after", "client_reviews"
+  const [gallery, setGallery] = useState([]);
+  const [openFolder, setOpenFolder] = useState(null);
   const [editBeforeAfter, setEditBeforeAfter] = useState({ images: [], videos: [] });
   const [editClientReviews, setEditClientReviews] = useState({ images: [], videos: [] });
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -25,6 +26,7 @@ export default function Consultancy() {
       .then(res => {
         setBeforeAfter(res.data.before_after || { images: [], videos: [] });
         setClientReviews(res.data.client_reviews || { images: [], videos: [] });
+        setGallery(res.data.gallery || []);
       })
       .catch(err => {
         console.error("Failed to load consultation media:", err);
@@ -272,55 +274,45 @@ export default function Consultancy() {
               <div className="space-y-6 pt-6">
                 <div className="flex items-center justify-between border-b border-eminence-border pb-2">
                   <h2 className="text-lg uppercase tracking-[0.15em]">Videos & Images Gallery</h2>
-                  {user?.role === "admin" && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditBeforeAfter({ images: [...beforeAfter.images], videos: [...beforeAfter.videos] });
-                        setEditClientReviews({ images: [...clientReviews.images], videos: [...clientReviews.videos] });
-                        setIsEditorOpen(true);
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-eminence-gold/10 text-eminence-gold hover:bg-eminence-gold hover:text-white rounded-md text-xs uppercase tracking-wider font-bold transition-all"
-                    >
-                      <Settings size={14} />
-                      Edit Folders
-                    </button>
-                  )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {/* Folder 1: Before & After */}
-                  <div 
-                    onClick={() => setOpenFolder("before_after")}
-                    className="bg-white border border-eminence-border rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:border-eminence-gold hover:shadow-lg transition-all group py-8"
-                  >
-                    <div className="w-16 h-16 rounded-2xl bg-eminence-gold/10 flex items-center justify-center text-eminence-gold group-hover:scale-110 transition-transform mb-4">
-                      <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h1.52c.314 0 .606-.115.83-.322l1.624-1.503a2.25 2.25 0 011.5-.575h7.528c.453 0 .89.17 1.226.479l1.625 1.503c.224.207.516.322.83.322h1.52a2.25 2.25 0 012.25 2.25v1.5M2.25 12.75l2.25-2.25M2.25 12.75h19.5m0 0l-2.25-2.25m2.25 2.25v5.25A2.25 2.25 0 0119.5 20.25h-15A2.25 2.25 0 012.25 18V12.75"></path>
-                      </svg>
-                    </div>
-                    <h3 className="font-serif text-lg text-gray-800 font-bold mb-1">Before & After Images</h3>
-                    <p className="text-xs text-eminence-muted">
-                      {beforeAfter.images.length + beforeAfter.videos.length} items inside
-                    </p>
-                  </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Folder: Men Before */}
+                  {[{type:"before",gender:"men",label:"Men — Before",color:"bg-blue-50 border-blue-200 text-blue-700"},{type:"after",gender:"men",label:"Men — After",color:"bg-emerald-50 border-emerald-200 text-emerald-700"},{type:"before",gender:"women",label:"Women — Before",color:"bg-pink-50 border-pink-200 text-pink-700"},{type:"after",gender:"women",label:"Women — After",color:"bg-rose-50 border-rose-200 text-rose-700"}].map(folder => {
+                    const folderItems = gallery.filter(item => item.type === folder.type && item.gender === folder.gender);
+                    return (
+                      <div
+                        key={`${folder.type}_${folder.gender}`}
+                        onClick={() => setOpenFolder(`${folder.type}_${folder.gender}`)}
+                        className={`border ${folder.color} rounded-2xl p-5 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-lg transition-all group py-7`}
+                      >
+                        <div className={`w-14 h-14 rounded-2xl ${folder.color} flex items-center justify-center group-hover:scale-110 transition-transform mb-3 border`}>
+                          <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                          </svg>
+                        </div>
+                        <h3 className="font-serif text-base text-gray-800 font-bold mb-1">{folder.label}</h3>
+                        <p className="text-xs text-eminence-muted">{folderItems.length} photos inside</p>
+                      </div>
+                    );
+                  })}
+                </div>
 
-                  {/* Folder 2: Client Reviews */}
-                  <div 
+                {/* Client Reviews (legacy) */}
+                {(clientReviews.images.length > 0 || clientReviews.videos.length > 0) && (
+                  <div
                     onClick={() => setOpenFolder("client_reviews")}
-                    className="bg-white border border-eminence-border rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:border-eminence-gold hover:shadow-lg transition-all group py-8"
+                    className="bg-white border border-eminence-border rounded-2xl p-5 flex flex-col items-center justify-center text-center cursor-pointer hover:border-eminence-gold hover:shadow-lg transition-all group py-7"
                   >
-                    <div className="w-16 h-16 rounded-2xl bg-eminence-gold/10 flex items-center justify-center text-eminence-gold group-hover:scale-110 transition-transform mb-4">
-                      <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h1.52c.314 0 .606-.115.83-.322l1.624-1.503a2.25 2.25 0 011.5-.575h7.528c.453 0 .89.17 1.226.479l1.625 1.503c.224.207.516.322.83.322h1.52a2.25 2.25 0 012.25 2.25v1.5M2.25 12.75l2.25-2.25M2.25 12.75h19.5m0 0l-2.25-2.25m2.25 2.25v5.25A2.25 2.25 0 0119.5 20.25h-15A2.25 2.25 0 012.25 18V12.75"></path>
+                    <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform mb-3">
+                      <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
                       </svg>
                     </div>
-                    <h3 className="font-serif text-lg text-gray-800 font-bold mb-1">Client Reviews</h3>
-                    <p className="text-xs text-eminence-muted">
-                      {clientReviews.images.length + clientReviews.videos.length} items inside
-                    </p>
+                    <h3 className="font-serif text-base text-gray-800 font-bold mb-1">Client Reviews</h3>
+                    <p className="text-xs text-eminence-muted">{clientReviews.images.length + clientReviews.videos.length} items inside</p>
                   </div>
-                </div>
+                )}
               </div>
             ) : (
               <div className="space-y-6 pt-6">
@@ -335,78 +327,99 @@ export default function Consultancy() {
                     </button>
                     <span className="text-eminence-border">|</span>
                     <h2 className="text-lg uppercase tracking-[0.15em]">
-                      {openFolder === "before_after" ? "Before & After Images" : "Client Reviews"}
+                      {openFolder === "client_reviews"
+                        ? "Client Reviews"
+                        : openFolder === "before_men" ? "Men — Before"
+                        : openFolder === "after_men" ? "Men — After"
+                        : openFolder === "before_women" ? "Women — Before"
+                        : openFolder === "after_women" ? "Women — After"
+                        : "Gallery"}
                     </h2>
                   </div>
-                  {user?.role === "admin" && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditBeforeAfter({ images: [...beforeAfter.images], videos: [...beforeAfter.videos] });
-                        setEditClientReviews({ images: [...clientReviews.images], videos: [...clientReviews.videos] });
-                        setIsEditorOpen(true);
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-eminence-gold/10 text-eminence-gold hover:bg-eminence-gold hover:text-white rounded-md text-xs uppercase tracking-wider font-bold transition-all"
-                    >
-                      <Settings size={14} />
-                      Edit Gallery
-                    </button>
-                  )}
                 </div>
 
                 {(() => {
-                  const folderData = openFolder === "before_after" ? beforeAfter : clientReviews;
-                  return (
-                    <div className="space-y-8 animate-fade-in">
-                      {/* Photos */}
-                      <div>
-                        <p className="text-xs uppercase tracking-widest text-eminence-muted mb-3 font-bold text-center">Photos</p>
-                        {folderData.images.length > 0 ? (
-                          <Carousel className="w-full max-w-md mx-auto relative px-8" opts={{ align: "start", loop: true }}>
-                            <CarouselContent className="-ml-3">
-                              {folderData.images.map((src, idx) => (
-                                <CarouselItem key={idx} className="pl-3 basis-full">
-                                  <div onClick={() => setLightbox({ type: "image", src: getMediaUrl(src) })} className="relative group cursor-pointer aspect-square overflow-hidden rounded-xl border border-eminence-border/30 hover:border-eminence-gold/50 transition-all hover:shadow-lg">
-                                    <img src={getMediaUrl(src)} alt={`Consultation ${idx + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                  </div>
-                                </CarouselItem>
-                              ))}
-                            </CarouselContent>
-                            <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/90 shadow hover:bg-white border-eminence-border" />
-                            <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/90 shadow hover:bg-white border-eminence-border" />
-                          </Carousel>
-                        ) : (
-                          <p className="text-xs text-eminence-muted italic text-center">No photos in this folder.</p>
-                        )}
-                      </div>
-
-                      {/* Videos */}
-                      <div>
-                        <p className="text-xs uppercase tracking-widest text-eminence-muted mb-3 font-bold text-center">Videos</p>
-                        {folderData.videos.length > 0 ? (
-                          <Carousel className="w-full max-w-xl mx-auto relative px-8" opts={{ align: "start", loop: true }}>
-                            <CarouselContent className="-ml-3">
-                              {folderData.videos.map((src, idx) => (
-                                <CarouselItem key={idx} className="pl-3 basis-full">
-                                  <div onClick={() => setLightbox({ type: "video", src: getMediaUrl(src) })} className="relative group cursor-pointer aspect-video overflow-hidden rounded-xl border border-eminence-border/30 hover:border-eminence-gold/50 transition-all hover:shadow-lg bg-black/5">
-                                    <video src={getMediaUrl(src)} className="w-full h-full object-cover" muted preload="metadata" />
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-all">
-                                      <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
-                                        <Play size={20} className="text-eminence-gold ml-0.5" fill="currentColor" />
+                  // Legacy folder: client_reviews
+                  if (openFolder === "client_reviews") {
+                    const folderData = clientReviews;
+                    return (
+                      <div className="space-y-8 animate-fade-in">
+                        <div>
+                          <p className="text-xs uppercase tracking-widest text-eminence-muted mb-3 font-bold text-center">Photos</p>
+                          {folderData.images.length > 0 ? (
+                            <Carousel className="w-full max-w-md mx-auto relative px-8" opts={{ align: "start", loop: true }}>
+                              <CarouselContent className="-ml-3">
+                                {folderData.images.map((src, idx) => (
+                                  <CarouselItem key={idx} className="pl-3 basis-full">
+                                    <div onClick={() => setLightbox({ type: "image", src: getMediaUrl(src) })} className="relative group cursor-pointer aspect-square overflow-hidden rounded-xl border border-eminence-border/30 hover:border-eminence-gold/50 transition-all hover:shadow-lg">
+                                      <img src={getMediaUrl(src)} alt={`Review ${idx + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </div>
+                                  </CarouselItem>
+                                ))}
+                              </CarouselContent>
+                              <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/90 shadow hover:bg-white border-eminence-border" />
+                              <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/90 shadow hover:bg-white border-eminence-border" />
+                            </Carousel>
+                          ) : (
+                            <p className="text-xs text-eminence-muted italic text-center">No photos in this folder.</p>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-widest text-eminence-muted mb-3 font-bold text-center">Videos</p>
+                          {folderData.videos.length > 0 ? (
+                            <Carousel className="w-full max-w-xl mx-auto relative px-8" opts={{ align: "start", loop: true }}>
+                              <CarouselContent className="-ml-3">
+                                {folderData.videos.map((src, idx) => (
+                                  <CarouselItem key={idx} className="pl-3 basis-full">
+                                    <div onClick={() => setLightbox({ type: "video", src: getMediaUrl(src) })} className="relative group cursor-pointer aspect-video overflow-hidden rounded-xl border border-eminence-border/30 hover:border-eminence-gold/50 transition-all hover:shadow-lg bg-black/5">
+                                      <video src={getMediaUrl(src)} className="w-full h-full object-cover" muted preload="metadata" />
+                                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-all">
+                                        <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+                                          <Play size={20} className="text-eminence-gold ml-0.5" fill="currentColor" />
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                </CarouselItem>
-                              ))}
-                            </CarouselContent>
-                            <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/90 shadow hover:bg-white border-eminence-border" />
-                            <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/90 shadow hover:bg-white border-eminence-border" />
-                          </Carousel>
-                        ) : (
-                          <p className="text-xs text-eminence-muted italic text-center">No videos in this folder.</p>
-                        )}
+                                  </CarouselItem>
+                                ))}
+                              </CarouselContent>
+                              <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/90 shadow hover:bg-white border-eminence-border" />
+                              <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/90 shadow hover:bg-white border-eminence-border" />
+                            </Carousel>
+                          ) : (
+                            <p className="text-xs text-eminence-muted italic text-center">No videos in this folder.</p>
+                          )}
+                        </div>
                       </div>
+                    );
+                  }
+
+                  // New gallery-based folders (before_men, after_men, before_women, after_women)
+                  const [type, gender] = openFolder.split("_");
+                  const folderItems = gallery.filter(item => item.type === type && item.gender === gender);
+                  return (
+                    <div className="space-y-4 animate-fade-in">
+                      {folderItems.length === 0 ? (
+                        <p className="text-xs text-eminence-muted italic text-center py-8">No photos in this folder yet.</p>
+                      ) : (
+                        <Carousel className="w-full max-w-md mx-auto relative px-8" opts={{ align: "start", loop: true }}>
+                          <CarouselContent className="-ml-3">
+                            {folderItems.map((item, idx) => (
+                              <CarouselItem key={idx} className="pl-3 basis-full">
+                                <div
+                                  onClick={() => setLightbox({ type: "image", src: getMediaUrl(item.url) })}
+                                  className="relative group cursor-pointer aspect-square overflow-hidden rounded-xl border border-eminence-border/30 hover:border-eminence-gold/50 transition-all hover:shadow-lg"
+                                >
+                                  <img src={getMediaUrl(item.url)} alt={`${type} ${gender} ${idx + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </div>
+                              </CarouselItem>
+                            ))}
+                          </CarouselContent>
+                          <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/90 shadow hover:bg-white border-eminence-border" />
+                          <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/90 shadow hover:bg-white border-eminence-border" />
+                        </Carousel>
+                      )}
                     </div>
                   );
                 })()}

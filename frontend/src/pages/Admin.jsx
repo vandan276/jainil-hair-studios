@@ -8796,49 +8796,204 @@ function OffersPanel({ offers, setOffers }) {
 }
 
 function GalleryPanel() {
-  const [photos, setPhotos] = useState([
-    "https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=400",
-    "https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?q=80&w=400",
-    "https://images.unsplash.com/photo-1605497746444-05dacd19ec7a?q=80&w=400"
-  ]);
+  const [gallery, setGallery] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [uploadType, setUploadType] = useState("before");
+  const [uploadGender, setUploadGender] = useState("men");
+  const [activeFilter, setActiveFilter] = useState("all");
 
-  const addPhoto = (url) => {
+  useEffect(() => {
+    api.get("/consultation-media")
+      .then(res => {
+        setGallery(res.data.gallery || []);
+      })
+      .catch(() => setGallery([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const addPhoto = async (url) => {
     if (!url) return;
-    setPhotos([url, ...photos]);
-    toast.success("Showcase photo added to live gallery feed!");
+    const relativeUrl = url.replace(/http:\/\/localhost:\d+/i, "").replace(/https?:\/\/[^\/]+/i, "");
+    const newItem = { url: relativeUrl, type: uploadType, gender: uploadGender, media_type: "image" };
+    const updated = [newItem, ...gallery];
+    setGallery(updated);
+    setSaving(true);
+    try {
+      await api.post("/admin/consultation-media", { gallery: updated });
+      toast.success("Photo added to gallery!");
+    } catch (err) {
+      toast.error("Failed to save: " + err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const removePhoto = (url) => {
-    setPhotos(photos.filter(p => p !== url));
-    toast.success("Showcase photo removed.");
+  const removePhoto = async (idx) => {
+    const updated = gallery.filter((_, i) => i !== idx);
+    setGallery(updated);
+    setSaving(true);
+    try {
+      await api.post("/admin/consultation-media", { gallery: updated });
+      toast.success("Photo removed.");
+    } catch (err) {
+      toast.error("Failed to save: " + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const CATEGORIES = [
+    { key: "all", label: "All Photos" },
+    { key: "before_men", label: "Before — Men" },
+    { key: "after_men", label: "After — Men" },
+    { key: "before_women", label: "Before — Women" },
+    { key: "after_women", label: "After — Women" },
+    { key: "review_men", label: "Reviews — Men" },
+    { key: "review_women", label: "Reviews — Women" },
+    { key: "before_unisex", label: "Before — Unisex" },
+    { key: "after_unisex", label: "After — Unisex" },
+  ];
+
+  const TYPE_LABELS = { before: "Before", after: "After", review: "Review" };
+  const GENDER_LABELS = { men: "Men", women: "Women", unisex: "Unisex" };
+  const TYPE_COLORS = { before: "bg-blue-100 text-blue-700", after: "bg-emerald-100 text-emerald-700", review: "bg-amber-100 text-amber-700" };
+  const GENDER_COLORS = { men: "bg-indigo-100 text-indigo-700", women: "bg-pink-100 text-pink-700", unisex: "bg-gray-100 text-gray-700" };
+
+  const filteredGallery = activeFilter === "all"
+    ? gallery
+    : gallery.filter(item => {
+        const [type, gender] = activeFilter.split("_");
+        return item.type === type && item.gender === gender;
+      });
+
+  const resolveUrl = (src) => {
+    if (!src) return "";
+    if (src.startsWith("http") || src.startsWith("blob:") || src.startsWith("data:")) return src;
+    return `${api.defaults.baseURL?.replace(/\/api$/, "") || ""}${src.startsWith("/") ? "" : "/"}${src}`;
   };
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="eminence-card p-6 max-w-xl">
-        <p className="overline text-eminence-gold">Upload Showcase Photo</p>
-        <div className="mt-2">
+      {/* Upload Card */}
+      <div className="eminence-card p-6">
+        <p className="overline text-eminence-gold mb-4">Upload Photo to Consultation Gallery</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block text-xs font-bold text-eminence-muted uppercase tracking-widest mb-1.5">Image Type</label>
+            <select
+              value={uploadType}
+              onChange={e => setUploadType(e.target.value)}
+              className="w-full border border-eminence-border bg-white rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-eminence-gold"
+            >
+              <option value="before">Before Image</option>
+              <option value="after">After Image</option>
+              <option value="review">Client Review</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-eminence-muted uppercase tracking-widest mb-1.5">Gender</label>
+            <select
+              value={uploadGender}
+              onChange={e => setUploadGender(e.target.value)}
+              className="w-full border border-eminence-border bg-white rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-eminence-gold"
+            >
+              <option value="men">Men</option>
+              <option value="women">Women</option>
+              <option value="unisex">Unisex</option>
+            </select>
+          </div>
+        </div>
+        <div className="bg-gray-50 border border-dashed border-eminence-border/60 rounded-xl p-4">
+          <p className="text-[10px] text-eminence-muted uppercase font-bold mb-2">
+            Adding as: <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold mr-1 ${TYPE_COLORS[uploadType]}`}>{TYPE_LABELS[uploadType]}</span>
+            <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${GENDER_COLORS[uploadGender]}`}>{GENDER_LABELS[uploadGender]}</span>
+          </p>
           <ImageUpload value="" onChange={addPhoto} testId="gallery-uploader" />
+        </div>
+        {saving && <p className="text-xs text-eminence-gold mt-2 animate-pulse">Saving...</p>}
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="font-serif text-xl text-gray-800">Consultation Photo Gallery</h3>
+            <p className="text-xs text-eminence-muted">Photos shown to clients in the consultation form, organized by category.</p>
+          </div>
+          <span className="text-xs font-bold text-eminence-muted bg-gray-100 px-3 py-1 rounded-full">{gallery.length} photos</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {CATEGORIES.map(cat => (
+            <button
+              key={cat.key}
+              onClick={() => setActiveFilter(cat.key)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${
+                activeFilter === cat.key
+                  ? "bg-eminence-gold text-white shadow"
+                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+              }`}
+            >
+              {cat.label}
+              {cat.key !== "all" && (
+                <span className="ml-1 opacity-70">
+                  ({gallery.filter(item => {
+                    const [t, g] = cat.key.split("_");
+                    return item.type === t && item.gender === g;
+                  }).length})
+                </span>
+              )}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-        <h3 className="font-serif text-2xl text-gray-800">Atelier Lookbook Feed</h3>
-        <p className="text-xs text-eminence-muted">Images published to client showcase feeds for aesthetic inspiration.</p>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        {photos.map(url => (
-          <div key={url} className="relative group rounded-xl overflow-hidden shadow border border-gray-100 aspect-square">
-            <img src={url} alt="Atelier look" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-              <button onClick={() => removePhoto(url)} className="p-3 bg-red-600 text-white rounded-full hover:bg-red-700 shadow transition-colors">
-                <Trash2 size={16} />
-              </button>
-            </div>
+      {/* Gallery Grid */}
+      {loading ? (
+        <div className="text-center py-12 text-eminence-muted text-sm">Loading gallery...</div>
+      ) : filteredGallery.length === 0 ? (
+        <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
+          <div className="w-14 h-14 rounded-2xl bg-eminence-gold/10 flex items-center justify-center text-eminence-gold mx-auto mb-4">
+            <Camera size={24} />
           </div>
-        ))}
-      </div>
+          <p className="text-sm font-bold text-gray-700 mb-1">No photos in this category</p>
+          <p className="text-xs text-eminence-muted">Upload a photo above and assign it to this category.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {filteredGallery.map((item, idx) => {
+            const origIdx = gallery.findIndex((g, i) => g.url === item.url && gallery.indexOf(g) === (activeFilter === "all" ? idx : gallery.findIndex(x => x.url === item.url && x.type === item.type && x.gender === item.gender)));
+            const realIdx = gallery.indexOf(item);
+            return (
+              <div key={`${item.url}-${realIdx}`} className="relative group rounded-xl overflow-hidden shadow border border-gray-100 aspect-square bg-gray-50">
+                <img
+                  src={resolveUrl(item.url)}
+                  alt={`${item.type} ${item.gender}`}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                {/* Badges */}
+                <div className="absolute top-2 left-2 flex flex-col gap-1">
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm ${TYPE_COLORS[item.type] || "bg-gray-100 text-gray-700"}`}>
+                    {TYPE_LABELS[item.type] || item.type}
+                  </span>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm ${GENDER_COLORS[item.gender] || "bg-gray-100 text-gray-700"}`}>
+                    {GENDER_LABELS[item.gender] || item.gender}
+                  </span>
+                </div>
+                {/* Remove button */}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-end justify-center pb-3 transition-opacity">
+                  <button
+                    onClick={() => removePhoto(realIdx)}
+                    className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 shadow transition-colors"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

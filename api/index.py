@@ -3298,6 +3298,8 @@ def get_consultation_media():
     doc = db.collection("settings").document("consultation_media").get()
     if doc.exists:
         data = doc.to_dict()
+        if "gallery" not in data:
+            data["gallery"] = []
         if "before_after" not in data:
             old_images = data.get("images", [])
             old_videos = data.get("videos", [])
@@ -3340,6 +3342,7 @@ def get_consultation_media():
 @api.post("/admin/consultation-media")
 def update_consultation_media(data: dict, user: dict = Depends(require_admin)):
     db.collection("settings").document("consultation_media").set({
+        "gallery": data.get("gallery", []),
         "before_after": data.get("before_after", {"images": [], "videos": []}),
         "client_reviews": data.get("client_reviews", {"images": [], "videos": []}),
         "updated_at": now_iso(),
