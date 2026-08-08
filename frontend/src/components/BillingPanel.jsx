@@ -624,6 +624,9 @@ export default function BillingPanel({ leads, initialClientName = "", initialCon
           }
         }
 
+        // Refresh leads to fetch newly added packages and stats
+        await refreshLeads();
+
         // Reset
         setLineItems([]);
         setClientName(""); setContactNumber("");
