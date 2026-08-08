@@ -2009,11 +2009,11 @@ export default function Admin() {
       )}
 
       {tab === "consultations" && (
-        <ConsultationsPanel consultations={consultations} orders={orders} refresh={refresh} t={t} />
+        <ConsultationsPanel consultations={consultations} orders={orders} refresh={refresh} t={t} branches={branches} />
       )}
 
       {tab === "clients" && (
-        <ClientsSegmentationPanel employees={employees} appointments={appointments} refreshAll={refresh} t={t} />
+        <ClientsSegmentationPanel employees={employees} appointments={appointments} refreshAll={refresh} t={t} branches={branches} />
       )}
 
       {tab === "users" && (
@@ -10080,7 +10080,7 @@ function SalesTeamOverview({ leads = [], employees = [], todayDateStr, selectedB
 }
 
 
-function ClientsSegmentationPanel({ employees = [], appointments = [], refreshAll, t }) {
+function ClientsSegmentationPanel({ employees = [], appointments = [], refreshAll, t, branches = [] }) {
   const [segments, setSegments] = useState({
     all: [],
     clients: [],
@@ -10674,8 +10674,10 @@ function ClientsSegmentationPanel({ employees = [], appointments = [], refreshAl
                   onChange={e => setProfileEditForm({ ...profileEditForm, branch: e.target.value })}
                   className="w-full border border-gray-200 bg-white rounded-xl p-3 text-xs focus:ring-1 focus:ring-gray-900 focus:outline-none"
                 >
-                  <option value="Baroda">Baroda</option>
-                  <option value="Surat">Surat</option>
+                  {branches.map(b => {
+                    const bName = typeof b === "string" ? b : (b?.name || "Unknown");
+                    return <option key={bName} value={bName}>{bName}</option>;
+                  })}
                 </select>
               </div>
 
@@ -11624,8 +11626,10 @@ function ClientsSegmentationPanel({ employees = [], appointments = [], refreshAl
                     onChange={e => setNewClientForm({ ...newClientForm, branch: e.target.value })}
                     className="w-full border border-gray-100 bg-gray-50/50 rounded-xl p-3 text-sm focus:ring-2 focus:ring-gray-900 focus:outline-none transition-all"
                   >
-                    <option value="Surat">Surat</option>
-                    <option value="Baroda">Baroda</option>
+                    {branches.map(b => {
+                      const bName = typeof b === "string" ? b : (b?.name || "Unknown");
+                      return <option key={bName} value={bName}>{bName}</option>;
+                    })}
                   </select>
                 </div>
                 <div>
@@ -12666,7 +12670,7 @@ function EmployeeManager({ defaultSubTab = "sales staff", employees, refresh, t,
       )}
 
       {subTab === "sales staff" && (
-        <SalesStaffPanel employees={employees} refresh={refresh} t={t} />
+        <SalesStaffPanel employees={employees} refresh={refresh} t={t} branches={branches} />
       )}
 
       {subTab === "attendance" && (() => {
@@ -13148,7 +13152,7 @@ function EmployeeManager({ defaultSubTab = "sales staff", employees, refresh, t,
       })()}
 
       {subTab === "service providers" && (
-        <ServiceProviderPanel employees={employees} refresh={refresh} t={t} />
+        <ServiceProviderPanel employees={employees} refresh={refresh} t={t} branches={branches} />
       )}
 
       {subTab === "payroll" && (
@@ -14159,7 +14163,7 @@ const SALES_STAFF_TYPES = [
   "Other"
 ];
 
-function ServiceProviderPanel({ employees, refresh, t }) {
+function ServiceProviderPanel({ employees, refresh, t, branches = [] }) {
   const emptyForm = {
     name: "", email: "", username: "", password: "", confirmPassword: "",
     phone: "", phones: [""],
@@ -14564,8 +14568,10 @@ function ServiceProviderPanel({ employees, refresh, t }) {
           <div>
             <label className="text-xs text-eminence-muted block mb-1">Branch <span className="text-rose-500">*</span></label>
             <select required value={form.branch} onChange={e => set("branch", e.target.value)} className={inputCls}>
-              <option value="Surat">Surat</option>
-              <option value="Baroda">Baroda</option>
+              {branches.map(b => {
+                const bName = typeof b === "string" ? b : (b?.name || "Unknown");
+                return <option key={bName} value={bName}>{bName}</option>;
+              })}
             </select>
           </div>
         </div>
@@ -14894,7 +14900,7 @@ function AttendanceKiosk({ employees, refresh }) {
   );
 }
 
-function SalesStaffPanel({ employees, refresh, t }) {
+function SalesStaffPanel({ employees, refresh, t, branches = [] }) {
   const emptyForm = {
     name: "", email: "", username: "", password: "", confirmPassword: "",
     phone: "", phones: [""],
@@ -15104,8 +15110,10 @@ function SalesStaffPanel({ employees, refresh, t }) {
           <div className="md:col-span-2 lg:col-span-2">
             <label className="text-xs text-eminence-muted block mb-1">Branch <span className="text-rose-500">*</span></label>
             <select required value={form.branch} onChange={e => set("branch", e.target.value)} className={inputCls}>
-              <option value="Surat">Surat</option>
-              <option value="Baroda">Baroda</option>
+              {branches.map(b => {
+                const bName = typeof b === "string" ? b : (b?.name || "Unknown");
+                return <option key={bName} value={bName}>{bName}</option>;
+              })}
             </select>
           </div>
           <div className="md:col-span-2 lg:col-span-2">
@@ -15294,7 +15302,7 @@ function SalesStaffPanel({ employees, refresh, t }) {
 
 
 
-function ConsultationsPanel({ consultations, orders = [], refresh, t }) {
+function ConsultationsPanel({ consultations, orders = [], refresh, t, branches = [] }) {
   const [expandedId, setExpandedId] = useState(null);
   const [images, setImages] = useState([]);
   const [videos, setVideos] = useState([]);
@@ -15721,8 +15729,10 @@ function ConsultationsPanel({ consultations, orders = [], refresh, t }) {
                 <div>
                   <label className="block text-xs uppercase tracking-widest text-eminence-muted mb-1">Location</label>
                   <select value={editForm.location || "Baroda"} onChange={e => setEditForm({ ...editForm, location: e.target.value })} className="w-full bg-eminence-surface border border-eminence-border px-3 py-2 text-sm focus:outline-none focus:border-eminence-gold rounded-lg">
-                    <option value="Baroda">Baroda</option>
-                    <option value="Surat">Surat</option>
+                    {branches.map(b => {
+                      const bName = typeof b === "string" ? b : (b?.name || "Unknown");
+                      return <option key={bName} value={bName}>{bName}</option>;
+                    })}
                   </select>
                 </div>
                 <div>
