@@ -208,19 +208,19 @@ async def get_optional_user(request: Request) -> Optional[dict]:
 
 
 async def require_admin(user: dict = Depends(get_current_user)) -> dict:
-    if user.get("role") != "admin":
+    if user.get("role") not in ["admin", "super_admin"]:
         raise HTTPException(403, "Admin access required")
     return user
 
 
 async def require_receptionist(user: dict = Depends(get_current_user)) -> dict:
-    if user.get("role") not in ["admin", "receptionist"]:
+    if user.get("role") not in ["admin", "super_admin", "receptionist"]:
         raise HTTPException(403, "Receptionist or Admin access required")
     return user
 
 
 async def require_employee(user: dict = Depends(get_current_user)) -> dict:
-    if user.get("role") not in ["admin", "employee", "sales", "service", "receptionist"]:
+    if user.get("role") not in ["admin", "super_admin", "employee", "sales", "service", "receptionist"]:
         raise HTTPException(403, "Staff or Admin access required")
     return user
 
@@ -2901,8 +2901,6 @@ def get_consultation_media():
     doc = db.collection("settings").document("consultation_media").get()
     if doc.exists:
         data = doc.to_dict()
-        if "gallery" not in data:
-            data["gallery"] = []
         if "before_after" not in data:
             old_images = data.get("images", [])
             old_videos = data.get("videos", [])
@@ -2945,7 +2943,6 @@ def get_consultation_media():
 @api.post("/admin/consultation-media")
 def update_consultation_media(data: dict, user: dict = Depends(require_admin)):
     db.collection("settings").document("consultation_media").set({
-        "gallery": data.get("gallery", []),
         "before_after": data.get("before_after", {"images": [], "videos": []}),
         "client_reviews": data.get("client_reviews", {"images": [], "videos": []}),
         "updated_at": now_iso(),
