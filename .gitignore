@@ -101,3 +101,5 @@ add_videos.py
 scratch/
 .env*.local
 backend/uploads/
+.git_backup/
+api/test_invoice_*.pdf

@@ -101,7 +101,8 @@ function AppContent() {
 
   return (
     <Routes location={location} key={location.pathname}>
-      <Route path="/" element={<Layout><Landing /></Layout>} />
+      <Route path="/" element={<Layout><Men /></Layout>} />
+      <Route path="/landing" element={<Layout><Landing /></Layout>} />
       <Route path="/men" element={<Layout><Men /></Layout>} />
       <Route path="/book" element={<Layout><ProtectedRoute><Book /></ProtectedRoute></Layout>} />
       <Route path="/shop" element={<Layout><Shop /></Layout>} />
