@@ -75,8 +75,17 @@ export default function Navbar() {
             })}
           </nav>
 
-          <Link to="/" className="flex items-center gap-2 lg:absolute lg:left-1/2 lg:-translate-x-1/2" data-testid="nav-logo">
-            <img src="/assets/logo.png" alt="Logo" className={`h-10 md:h-12 w-auto object-contain transition-all duration-300 ${(solid || isMenPage) ? '' : 'brightness-0 invert'}`} />
+          <Link to="/" className="flex flex-col items-center justify-center text-center lg:absolute lg:left-1/2 lg:-translate-x-1/2 group py-1" data-testid="nav-logo">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <span className="w-2.5 h-[1px] bg-eminence-gold"></span>
+              <span className="font-serif tracking-[0.28em] text-lg md:text-xl font-bold uppercase text-eminence-text leading-none">
+                JAINIL HAIR
+              </span>
+              <span className="w-2.5 h-[1px] bg-eminence-gold"></span>
+            </div>
+            <span className="text-[9px] md:text-[10px] tracking-[0.45em] uppercase font-light text-eminence-gold block -mt-0.5">
+              studio
+            </span>
           </Link>
 
           <div className="flex items-center gap-5 lg:flex-1 lg:justify-end">
